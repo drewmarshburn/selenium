@@ -30,8 +30,10 @@ from selenium.webdriver.remote.webdriver import WebElement
 
 class title_is(object):
     """An expectation for checking the title of a page.
+
     title is the expected title, which must be an exact match
-    returns True if the title matches, false otherwise."""
+    returns True if the title matches, false otherwise.
+    """
     def __init__(self, title):
         self.title = title
 
@@ -41,7 +43,9 @@ class title_is(object):
 
 class title_contains(object):
     """ An expectation for checking that the title contains a case-sensitive
-    substring. title is the fragment of title expected
+    substring.
+
+    title is the fragment of title expected
     returns True when the title matches, False otherwise
     """
     def __init__(self, title):
@@ -51,23 +55,11 @@ class title_contains(object):
         return self.title in driver.title
 
 
-class presence_of_element_located(object):
-    """ An expectation for checking that an element is present on the DOM
-    of a page. This does not necessarily mean that the element is visible.
-    locator - used to find the element
-    returns the WebElement once it is located
-    """
-    def __init__(self, locator):
-        self.locator = locator
-
-    def __call__(self, driver):
-        return _find_element(driver, self.locator)
-
-
 class url_contains(object):
     """ An expectation for checking that the current url contains a
     case-sensitive substring.
-    url is the fragment of url expected,
+
+    url is the fragment of url expected
     returns True when the url matches, False otherwise
     """
     def __init__(self, url):
@@ -79,8 +71,10 @@ class url_contains(object):
 
 class url_matches(object):
     """An expectation for checking the current url.
+
     pattern is the expected pattern, which must be an exact match
-    returns True if the url matches, false otherwise."""
+    returns True if the url matches, false otherwise.
+    """
     def __init__(self, pattern):
         self.pattern = pattern
 
@@ -93,8 +87,10 @@ class url_matches(object):
 
 class url_to_be(object):
     """An expectation for checking the current url.
+
     url is the expected url, which must be an exact match
-    returns True if the url matches, false otherwise."""
+    returns True if the url matches, false otherwise.
+    """
     def __init__(self, url):
         self.url = url
 
@@ -104,8 +100,10 @@ class url_to_be(object):
 
 class url_changes(object):
     """An expectation for checking the current url.
+
     url is the expected url, which must not be an exact match
-    returns True if the url is different, false otherwise."""
+    returns True if the url is different, false otherwise.
+    """
     def __init__(self, url):
         self.url = url
 
@@ -113,11 +111,16 @@ class url_changes(object):
         return self.url != driver.current_url
 
 
+def _element_if_visible(element, visibility=True):
+    return element if element.is_displayed() == visibility else False
+
+
 class visibility_of_element_located(object):
     """ An expectation for checking that an element is present on the DOM of a
     page and visible. Visibility means that the element is not only displayed
     but also has a height and width that is greater than 0.
-    locator - used to find the element
+
+    locator is used to find the element
     returns the WebElement once it is located and visible
     """
     def __init__(self, locator):
@@ -134,6 +137,7 @@ class visibility_of(object):
     """ An expectation for checking that an element, known to be present on the
     DOM of a page, is visible. Visibility means that the element is not only
     displayed but also has a height and width that is greater than 0.
+
     element is the WebElement
     returns the (same) WebElement once it is visible
     """
@@ -144,28 +148,12 @@ class visibility_of(object):
         return _element_if_visible(self.element)
 
 
-def _element_if_visible(element, visibility=True):
-    return element if element.is_displayed() == visibility else False
-
-
-class presence_of_all_elements_located(object):
-    """ An expectation for checking that there is at least one element present
-    on a web page.
-    locator is used to find the element
-    returns the list of WebElements once they are located
-    """
-    def __init__(self, locator):
-        self.locator = locator
-
-    def __call__(self, driver):
-        return _find_elements(driver, self.locator)
-
-
 class visibility_of_any_elements_located(object):
     """ An expectation for checking that there is at least one element visible
     on a web page.
-    locator is used to find the element
-    returns the list of WebElements once they are located
+
+    locator is used to find the elements
+    returns the list of WebElements once they are located and visible
     """
     def __init__(self, locator):
         self.locator = locator
@@ -178,7 +166,8 @@ class visibility_of_all_elements_located(object):
     """ An expectation for checking that all elements are present on the DOM of a
     page and visible. Visibility means that the elements are not only displayed
     but also has a height and width that is greater than 0.
-    locator - used to find the elements
+
+    locator is used to find the elements
     returns the list of WebElements once they are located and visible
     """
     def __init__(self, locator):
@@ -195,10 +184,72 @@ class visibility_of_all_elements_located(object):
             return False
 
 
+class invisibility_of_element_located(invisibility_of_element):
+    """ An Expectation for checking that an element is either invisible or not
+    present on the DOM.
+
+    locator is used to find the element
+    """
+    def __init__(self, locator):
+        self.target = _find_element(driver, locator)
+
+
+class invisibility_of(object):
+    """ An Expectation for checking that an element is either invisible or not
+    present on the DOM.
+
+    element is a WebElement
+    """
+    def __init__(self, element):
+        self.target = element
+
+    def __call__(self, driver):
+        try:
+            target = self.target
+            return _element_if_visible(target, False)
+        except (NoSuchElementException, StaleElementReferenceException):
+            # In the case of NoSuchElement, returns true because the element is
+            # not present in DOM. The try block checks if the element is present
+            # but is invisible.
+            # In the case of StaleElementReference, returns true because stale
+            # element reference implies that element is no longer visible.
+            return True
+
+
+class presence_of_element_located(object):
+    """ An expectation for checking that an element is present on the DOM
+    of a page. This does not necessarily mean that the element is visible.
+
+    locator is used to find the element
+    returns the WebElement once it is located
+    """
+    def __init__(self, locator):
+        self.locator = locator
+
+    def __call__(self, driver):
+        return _find_element(driver, self.locator)
+
+
+class presence_of_all_elements_located(object):
+    """ An expectation for checking that all elements matching the locator are
+    present on the page.
+
+    locator is used to find the element
+    returns the list of WebElements once they are located
+    """
+    def __init__(self, locator):
+        self.locator = locator
+
+    def __call__(self, driver):
+        return _find_elements(driver, self.locator)
+
+
 class text_to_be_present_in_element(object):
     """ An expectation for checking if the given text is present in the
     specified element.
-    locator, text
+
+    locator is used to find the WebElement
+    text is the text to search for, can be a partial match
     """
     def __init__(self, locator, text_):
         self.locator = locator
@@ -215,7 +266,10 @@ class text_to_be_present_in_element(object):
 class text_to_be_present_in_element_value(object):
     """
     An expectation for checking if the given text is present in the element's
-    locator, text
+    value attribute
+
+    locator is used to find the WebElement
+    text is the text to search for, can be a partial match
     """
     def __init__(self, locator, text_):
         self.locator = locator
@@ -253,58 +307,28 @@ class frame_to_be_available_and_switch_to_it(object):
             return False
 
 
-class invisibility_of_element_located(object):
-    """ An Expectation for checking that an element is either invisible or not
-    present on the DOM.
-
-    locator used to find the element
-    """
-    def __init__(self, locator):
-        self.target = locator
-
-    def __call__(self, driver):
-        try:
-            target = self.target
-            if not isinstance(target, WebElement):
-                target = _find_element(driver, target)
-            return _element_if_visible(target, False)
-        except (NoSuchElementException, StaleElementReferenceException):
-            # In the case of NoSuchElement, returns true because the element is
-            # not present in DOM. The try block checks if the element is present
-            # but is invisible.
-            # In the case of StaleElementReference, returns true because stale
-            # element reference implies that element is no longer visible.
-            return True
-
-
-class invisibility_of_element(invisibility_of_element_located):
-    """ An Expectation for checking that an element is either invisible or not
-    present on the DOM.
-
-    element is either a locator (text) or an WebElement
-    """
-    def __init__(self, element):
-        self.target = element
-
-
 class element_to_be_clickable(object):
     """ An Expectation for checking an element is visible and enabled such that
-    you can click it."""
-    def __init__(self, locator):
-        self.locator = locator
+    you can click it.
+
+    target is either a locator (text) or a WebElement
+    returns the WebElement if it is visible and enabled
+    """
+    def __init__(self, target):
+        self.target = target
 
     def __call__(self, driver):
-        element = visibility_of_element_located(self.locator)(driver)
-        if element and element.is_enabled():
-            return element
-        else:
-            return False
+        if not isinstance(self.target, WebElement):
+            self.target = visibility_of_element_located(self.locator)(driver)
+        if self.target and self.target.is_enabled():
+            return self.target
+        return False
 
 
 class staleness_of(object):
     """ Wait until an element is no longer attached to the DOM.
     element is the element to wait for.
-    returns False if the element is still attached to the DOM, true otherwise.
+    returns False if the element is still attached to the DOM, True otherwise.
     """
     def __init__(self, element):
         self.element = element
@@ -320,6 +344,7 @@ class staleness_of(object):
 
 class element_to_be_selected(object):
     """ An expectation for checking the selection is selected.
+
     element is WebElement object
     """
     def __init__(self, element):
@@ -331,7 +356,9 @@ class element_to_be_selected(object):
 
 class element_located_to_be_selected(object):
     """An expectation for the element to be located is selected.
-    locator is a tuple of (by, path)"""
+
+    locator is a tuple of (by, path)
+    """
     def __init__(self, locator):
         self.locator = locator
 
@@ -341,8 +368,9 @@ class element_located_to_be_selected(object):
 
 class element_selection_state_to_be(object):
     """ An expectation for checking if the given element is selected.
+
     element is WebElement object
-    is_selected is a Boolean."
+    is_selected is a Boolean.
     """
     def __init__(self, element, is_selected):
         self.element = element
@@ -355,6 +383,7 @@ class element_selection_state_to_be(object):
 class element_located_selection_state_to_be(object):
     """ An expectation to locate an element and check if the selection state
     specified is in that state.
+
     locator is a tuple of (by, path)
     is_selected is a boolean
     """
